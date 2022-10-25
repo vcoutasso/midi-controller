@@ -5,8 +5,10 @@ USBMIDI_CREATE_DEFAULT_INSTANCE();
 
 // Buttons
 
-const int buttonCount = 4;
-const int buttonPins[buttonCount] = {2, 3, 4, 5};
+const int buttonCount = 8;
+const int buttonPins[buttonCount] = {2, 3, 4, 5, 6, 7, 8, 9};
+// TODO: Temporary workaround
+const int increments[buttonCount] = {0, 2, 4, 5, 7, 9, 11, 12};
 
 int currentButtonState[buttonCount] = {};
 int previousButtonState[buttonCount] = {};
@@ -21,9 +23,15 @@ const int potentiometerPins[potentiometerCount] = {A0, A1};
 
 int currentPotentiometerState[potentiometerCount] = {0};
 int previousPotentiometerState[potentiometerCount] = {0};
+bool isPotentiometerMoving = false;
+int potentiometerVariationThreshold = 10;
+unsigned long potentiometerReadTimeout = 300;
 
 int currentMidiState[potentiometerCount] = {0};
 int previousMidiState[potentiometerCount] = {0};
+
+unsigned long previousReadTimestamp[potentiometerCount] = {0};
+unsigned long timeElapsedSinceLastRead[potentiometerCount] = {0};
 
 // MIDI
 
@@ -44,7 +52,7 @@ void loop() {
 }
 
 void readButtons() {
-  for (int i = 0; i < buttonCount; i++) {
+  for (int i = 0; i < buttonCount; ++i) {
     currentButtonState[i] = digitalRead(buttonPins[i]);
 
     if ((millis() - lastDebounceTime[i]) > debounceDelay) {
@@ -52,8 +60,8 @@ void readButtons() {
         lastDebounceTime[i] = millis();
 
         int signal = currentButtonState[i] == LOW ? 127 : 0;
-
-        MIDI.sendNoteOn(lowestNote + i, signal, midiChannel);
+        int note = lowestNote + increments[i];
+        MIDI.sendNoteOn(note, signal, midiChannel);
 
         previousButtonState[i] = currentButtonState[i];
       }
@@ -63,5 +71,30 @@ void readButtons() {
 }
 
 void readPotentiometers() {
+  for (int i = 0; i < potentiometerCount; ++i) {
+    currentPotentiometerState[i] = analogRead(potentiometerPins[i]);
 
+    currentMidiState[i] = map(currentPotentiometerState[i], 0, 1023, 0, 127);
+
+    int variation = abs(currentPotentiometerState[i] - previousPotentiometerState[i]);
+
+    long timestamp = millis();
+
+    if (variation > potentiometerVariationThreshold) {
+      previousReadTimestamp[i] = timestamp;
+    }
+
+    timeElapsedSinceLastRead[i] = timestamp - previousReadTimestamp[i];
+
+    isPotentiometerMoving = timeElapsedSinceLastRead[i] < potentiometerReadTimeout;
+
+    if (isPotentiometerMoving) {
+      if (currentMidiState[i] != previousMidiState[i]) {
+        MIDI.sendControlChange(lowestCC + i, currentMidiState[i], midiChannel);
+
+        previousPotentiometerState[i] = currentPotentiometerState[i];
+        previousMidiState[i] = currentMidiState[i];
+      }
+    }
+  }
 }
