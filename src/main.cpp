@@ -55,7 +55,7 @@ void setup() {
 void loop() {
   readButtons();
   readPotentiometers();
-  displayText();
+  if (millis() % 250 == 0) displayText(midiChannel, velocity, lowestNote);
 }
 
 void readButtons() {
@@ -79,12 +79,11 @@ void readButtons() {
       }
     }
   }
-
 }
 
 void readPotentiometers() {
   lowestNote = map(analogRead(A2), 0, 1023, 0, 127 - buttonCount);
-  velocity = map(analogRead(A3), 0, 1023, 0, 127 - buttonCount);
+  velocity = map(analogRead(A3), 0, 1023, 0, 127);
 
   for (int i = 0; i < potentiometerCount; ++i) {
     currentPotentiometerState[i] = analogRead(potentiometerPins[i]);

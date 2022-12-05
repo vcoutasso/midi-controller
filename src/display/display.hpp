@@ -5,7 +5,11 @@
 #define OLED_DS 12
 #define OLED_RST -1
 
+#include <Adafruit_SSD1331.h>
+
+extern Adafruit_SSD1331 display;
+
 void setupDisplay();
-void displayText();
+void displayText(int channel, int velocity, int baseNote);
 
 #endif // DISPLAY_HPP
