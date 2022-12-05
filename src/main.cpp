@@ -1,3 +1,5 @@
+#include "display/display.hpp"
+#include "bluetooth/bluetooth.hpp"
 #include <Arduino.h>
 #include <USB-MIDI.h>
 
@@ -36,18 +38,24 @@ unsigned long timeElapsedSinceLastRead[potentiometerCount] = {0};
 // MIDI
 
 byte midiChannel = 1;
+byte lowestCC = 1;
 byte lowestNote = 36;
 byte velocity = 127;
 
 void readButtons();
 void readPotentiometers();
+
 void setup() {
   for (auto pin: buttonPins) pinMode(pin, INPUT_PULLUP);
+  MIDI.begin();
+  setupDisplay();
+  // setupSerialBluetooth();
 }
 
 void loop() {
   readButtons();
   readPotentiometers();
+  displayText();
 }
 
 void readButtons() {
@@ -75,6 +83,9 @@ void readButtons() {
 }
 
 void readPotentiometers() {
+  lowestNote = map(analogRead(A2), 0, 1023, 0, 127 - buttonCount);
+  velocity = map(analogRead(A3), 0, 1023, 0, 127 - buttonCount);
+
   for (int i = 0; i < potentiometerCount; ++i) {
     currentPotentiometerState[i] = analogRead(potentiometerPins[i]);
 
