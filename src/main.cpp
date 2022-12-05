@@ -7,7 +7,7 @@ USBMIDI_CREATE_DEFAULT_INSTANCE();
 
 const int buttonCount = 8;
 const int buttonPins[buttonCount] = {2, 3, 4, 5, 6, 7, 8, 9};
-// TODO: Temporary workaround
+// Workaround so we can have a full octave with 8 buttons by skipping the sharp notes
 const int increments[buttonCount] = {0, 2, 4, 5, 7, 9, 11, 12};
 
 int currentButtonState[buttonCount] = {};
@@ -37,11 +37,10 @@ unsigned long timeElapsedSinceLastRead[potentiometerCount] = {0};
 
 byte midiChannel = 1;
 byte lowestNote = 36;
-byte lowestCC = 1;
+byte velocity = 127;
 
 void readButtons();
 void readPotentiometers();
-
 void setup() {
   for (auto pin: buttonPins) pinMode(pin, INPUT_PULLUP);
 }
@@ -59,9 +58,14 @@ void readButtons() {
       if (previousButtonState[i] != currentButtonState[i]) {
         lastDebounceTime[i] = millis();
 
-        int signal = currentButtonState[i] == LOW ? 127 : 0;
+        int isOn = currentButtonState[i] == LOW;
         int note = lowestNote + increments[i];
-        MIDI.sendNoteOn(note, signal, midiChannel);
+
+        if (isOn) {
+          MIDI.sendNoteOn(note, velocity, midiChannel);
+        } else {
+          MIDI.sendNoteOff(note, velocity, midiChannel);
+        }	
 
         previousButtonState[i] = currentButtonState[i];
       }
