@@ -4,6 +4,7 @@
 #include <USB-MIDI.h>
 
 USBMIDI_CREATE_DEFAULT_INSTANCE();
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, BLEMIDI);
 
 // Buttons
 
@@ -48,8 +49,9 @@ void readPotentiometers();
 void setup() {
   for (auto pin: buttonPins) pinMode(pin, INPUT_PULLUP);
   MIDI.begin();
+  BLEMIDI.begin();
   setupDisplay();
-  // setupSerialBluetooth();
+  setupSerialBluetooth();
 }
 
 void loop() {
@@ -71,8 +73,10 @@ void readButtons() {
 
         if (isOn) {
           MIDI.sendNoteOn(note, velocity, midiChannel);
+          BLEMIDI.sendNoteOn(note, velocity, midiChannel);
         } else {
           MIDI.sendNoteOff(note, velocity, midiChannel);
+          BLEMIDI.sendNoteOff(note, velocity, midiChannel);
         }	
 
         previousButtonState[i] = currentButtonState[i];
@@ -105,6 +109,7 @@ void readPotentiometers() {
     if (isPotentiometerMoving) {
       if (currentMidiState[i] != previousMidiState[i]) {
         MIDI.sendControlChange(lowestCC + i, currentMidiState[i], midiChannel);
+        BLEMIDI.sendControlChange(lowestCC + i, currentMidiState[i], midiChannel);
 
         previousPotentiometerState[i] = currentPotentiometerState[i];
         previousMidiState[i] = currentMidiState[i];
