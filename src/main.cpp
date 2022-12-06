@@ -8,10 +8,10 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, BLEMIDI);
 
 // Buttons
 
-const int buttonCount = 8;
-const int buttonPins[buttonCount] = {2, 3, 4, 5, 6, 7, 8, 9};
+const int buttonCount = 9;
+const int buttonPins[buttonCount] = {2, 3, 4, 5, 6, 7, 8, 9, 10};
 // Workaround so we can have a full octave with 8 buttons by skipping the sharp notes
-const int increments[buttonCount] = {0, 2, 4, 5, 7, 9, 11, 12};
+const int increments[buttonCount] = {0, 2, 4, 5, 7, 9, 11, 12, 13};
 
 int currentButtonState[buttonCount] = {};
 int previousButtonState[buttonCount] = {};
@@ -21,8 +21,8 @@ const unsigned long debounceDelay = 50;
 
 // Potentiometers
 
-const int potentiometerCount = 2;
-const int potentiometerPins[potentiometerCount] = {A0, A1};
+const int potentiometerCount = 4;
+const int potentiometerPins[potentiometerCount] = {A0, A1, A2, A3};
 
 int currentPotentiometerState[potentiometerCount] = {0};
 int previousPotentiometerState[potentiometerCount] = {0};
@@ -93,8 +93,8 @@ void readButtons() {
 }
 
 void readPotentiometers() {
-  lowestNote = map(analogRead(A2), 0, 1023, 0, 127 - buttonCount);
-  velocity = map(analogRead(A3), 0, 1023, 0, 127);
+  lowestNote = map(analogRead(A4), 0, 1023, 0, 127 - buttonCount);
+  velocity = map(analogRead(A5), 0, 1023, 0, 127);
 
   for (int i = 0; i < potentiometerCount; ++i) {
     currentPotentiometerState[i] = analogRead(potentiometerPins[i]);
