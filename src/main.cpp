@@ -54,10 +54,17 @@ void setup() {
   setupSerialBluetooth();
 }
 
+uint32_t previousTime = 0;
+uint32_t displayUpdateInterval = 250; // ms
+
 void loop() {
   readButtons();
   readPotentiometers();
-  if (millis() % 250 == 0) displayText(midiChannel, velocity, lowestNote);
+  uint32_t currentTime = millis();
+  if (currentTime - previousTime >= displayUpdateInterval) {
+    previousTime = currentTime;
+    displayText(midiChannel, velocity, lowestNote);
+  }
 }
 
 void readButtons() {
